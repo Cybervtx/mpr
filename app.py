@@ -15,6 +15,7 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=True)
 
+
 # Definir uma rota raiz (pagina inicial)
 @app.route('/')
 def hello_world():
@@ -47,6 +48,7 @@ def delete_product(product_id):
     return jsonify({"message": "Produto nao encontrado"}), 404
 
 
+# Recuperando detalhes de um produto
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 def get_product_details(product_id):
     product = Product.query.get(product_id)
@@ -58,6 +60,39 @@ def get_product_details(product_id):
             "description": product.description
         }), 200
     return jsonify({"message": "Produto nao encontrado"}), 404
+
+
+# Atualizando dados de um produto
+@app.route('/api/products/update/<int:product_id>', methods=['PUT'])
+def upadte_product(product_id):
+    product = Product.query.get(product_id)
+    
+    if not product:
+        return jsonify({"message": "Produto nao encontrado"}), 404
+    
+    data = request.json
+
+    if 'name' in data:
+        product.name = data['name']
+
+    if 'price' in data:
+        product.price = data['price']
+
+    if 'description' in data:
+        product.description = data['description']
+
+    db.session.commit()
+
+    return jsonify({"message": "Produto atualizado"}), 200
+
+# Recuperar todos os produtos
+@app.route('/api/products', methods=['GET'])
+def get_products():
+    products = Product.query.all()
+    list = [{'id': product.id, 'name': product.name, 'price': product.price, 'description': product.description } for product in products]
+    return jsonify(list)
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
