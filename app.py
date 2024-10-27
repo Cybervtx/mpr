@@ -15,6 +15,7 @@ class Product(db.Model):
     price = db.Column(db.Float, nullable=False)
     description = db.Column(db.Text, nullable=True)
 
+# Adicionando produto ao banco de dados
 @app.route('/api/products/add', methods=['POST'])
 def add_product():
     data = request.json
@@ -27,6 +28,16 @@ def add_product():
         except IntegrityError :
             return jsonify({"message": "Produto Já existe"}), 409
     return jsonify({"message": "Invalid product data"}), 400
+
+# Excluindo produto do banco de dados
+@app.route('/api/products/delete/<int:product_id>', methods=['DELETE'])
+def delete_product(product_id):
+    product = Product.query.get(product_id)
+    if product:
+        db.session.delete(product)
+        db.session.commit()
+        return jsonify({"message": "Produto deletado com sucesso"}), 200
+    return jsonify({"message": "Produto nao encontrado"}), 404
 
 # Definir uma rota raiz (pagina inicial)
 @app.route('/')
