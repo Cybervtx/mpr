@@ -3,6 +3,7 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_cors import CORS
+from flask_login import UserMixin
 
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
@@ -10,9 +11,15 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 db = SQLAlchemy(app)
 CORS(app)
 
+
+# Modelando Usuarios
+class User(db.Model, UserMixin):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(80), nullable=False, unique=True)
+    password = db.Column(db.String(80), nullable=True)
+
+
 # Modelagem do banco de dados
-
-
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False, unique=True)
@@ -22,8 +29,8 @@ class Product(db.Model):
 
 # Definir uma rota raiz (pagina inicial)
 @app.route('/')
-def hello_world():
-    return 'Hello World'
+def home():
+    return 'PROJETO MPR'
 
 
 # Adicionando produto ao banco de dados
@@ -90,14 +97,15 @@ def upadte_product(product_id):
 
     return jsonify({"message": "Produto atualizado"}), 200
 
+
 # Recuperar todos os produtos
-
-
 @app.route('/api/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
     list = [{'id': product.id, 'name': product.name, 'price': product.price,
              'description': product.description} for product in products]
+    if len(list) == 0:
+        return jsonify({"message": "Nao existe produtos cadastrados"}), 404
     return jsonify(list)
 
 
