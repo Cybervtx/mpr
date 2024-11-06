@@ -15,7 +15,7 @@ CORS(app)
 # Modelando Usuarios
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False, unique=True)
+    username = db.Column(db.String(80), nullable=False, unique=True)
     password = db.Column(db.String(80), nullable=True)
 
 
@@ -31,6 +31,13 @@ class Product(db.Model):
 @app.route('/')
 def home():
     return 'PROJETO MPR'
+
+
+# Login do usuario
+@app.route('/login', methods=["POST"])
+def login():
+    data = request.json
+    user = User.query.filter_by(username=data.get("username")).first()
 
 
 # Adicionando produto ao banco de dados
