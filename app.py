@@ -11,6 +11,8 @@ db = SQLAlchemy(app)
 CORS(app)
 
 # Modelagem do banco de dados
+
+
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(120), nullable=False, unique=True)
@@ -29,12 +31,13 @@ def hello_world():
 def add_product():
     data = request.json
     if 'name' in data and 'price' in data:
-        product = Product(name=data['name'],price=data['price'],description=data.get("description",""))
+        product = Product(
+            name=data['name'], price=data['price'], description=data.get("description", ""))
         try:
             db.session.add(product)
             db.session.commit()
             return jsonify({"message": "Produto cadastrado com sucesso"}), 201
-        except IntegrityError :
+        except IntegrityError:
             return jsonify({"message": "Produto Já existe"}), 409
     return jsonify({"message": "Invalid product data"}), 400
 
@@ -68,10 +71,10 @@ def get_product_details(product_id):
 @app.route('/api/products/update/<int:product_id>', methods=['PUT'])
 def upadte_product(product_id):
     product = Product.query.get(product_id)
-    
+
     if not product:
         return jsonify({"message": "Produto nao encontrado"}), 404
-    
+
     data = request.json
 
     if 'name' in data:
@@ -88,12 +91,14 @@ def upadte_product(product_id):
     return jsonify({"message": "Produto atualizado"}), 200
 
 # Recuperar todos os produtos
+
+
 @app.route('/api/products', methods=['GET'])
 def get_products():
     products = Product.query.all()
-    list = [{'id': product.id, 'name': product.name, 'price': product.price, 'description': product.description } for product in products]
+    list = [{'id': product.id, 'name': product.name, 'price': product.price,
+             'description': product.description} for product in products]
     return jsonify(list)
-
 
 
 if __name__ == '__main__':
