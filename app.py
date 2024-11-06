@@ -38,6 +38,9 @@ def home():
 def login():
     data = request.json
     user = User.query.filter_by(username=data.get("username")).first()
+    if user and data.get("password") == user.password:
+        return jsonify({"message": "Logado"})
+    return jsonify({"message": "Nao autorizado"}), 401
 
 
 # Adicionando produto ao banco de dados
