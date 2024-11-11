@@ -3,12 +3,16 @@ from flask import Flask, request, jsonify
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.exc import IntegrityError
 from flask_cors import CORS
-from flask_login import UserMixin
+from flask_login import UserMixin, login_user, LoginManager, login_required, logout_user
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = 'softhouse_developer'
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///ecommerce.db'
 
+login_manager = LoginManager()
 db = SQLAlchemy(app)
+login_manager.init_app(app)
+login_manager.login_view = 'login'
 CORS(app)
 
 
@@ -30,7 +34,13 @@ class Product(db.Model):
 # Definir uma rota raiz (pagina inicial)
 @app.route('/')
 def home():
-    return 'PROJETO MPR'
+    return 'PROJETO MPR '
+
+
+# Autenticaçao
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
 
 
 # Login do usuario
@@ -38,13 +48,23 @@ def home():
 def login():
     data = request.json
     user = User.query.filter_by(username=data.get("username")).first()
+
     if user and data.get("password") == user.password:
-        return jsonify({"message": "Logado"})
+        login_user(user)
+        return jsonify({"message": "Logado com sucesso"})
+    
     return jsonify({"message": "Nao autorizado"}), 401
 
+# Logout do usuario
+@app.route('/logout', methods=["POST"])
+@login_required
+def logout():
+    logout_user()
+    return jsonify({"message": "Logout com sucesso"})
 
 # Adicionando produto ao banco de dados
 @app.route('/api/products/add', methods=['POST'])
+@login_required
 def add_product():
     data = request.json
     if 'name' in data and 'price' in data:
@@ -61,6 +81,7 @@ def add_product():
 
 # Excluindo produto do banco de dados
 @app.route('/api/products/delete/<int:product_id>', methods=['DELETE'])
+@login_required
 def delete_product(product_id):
     product = Product.query.get(product_id)
     if product:
@@ -72,6 +93,7 @@ def delete_product(product_id):
 
 # Recuperando detalhes de um produto
 @app.route('/api/products/<int:product_id>', methods=['GET'])
+@login_required
 def get_product_details(product_id):
     product = Product.query.get(product_id)
     if product:
@@ -86,6 +108,7 @@ def get_product_details(product_id):
 
 # Atualizando dados de um produto
 @app.route('/api/products/update/<int:product_id>', methods=['PUT'])
+@login_required
 def upadte_product(product_id):
     product = Product.query.get(product_id)
 
@@ -110,6 +133,7 @@ def upadte_product(product_id):
 
 # Recuperar todos os produtos
 @app.route('/api/products', methods=['GET'])
+@login_required
 def get_products():
     products = Product.query.all()
     list = [{'id': product.id, 'name': product.name, 'price': product.price,
